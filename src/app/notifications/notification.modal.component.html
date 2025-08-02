@@ -7,7 +7,15 @@
   </ion-toolbar>
 </ion-header>
 <ion-content class="ion-padding">
-  <app-mm-card [showIcon]="true" title="Test">
-    <p class="m-b-2">Implement inbox</p>
+  @if (data?.length) { @for (item of data; track item; let i = $index) {
+
+  <app-mm-card>
+    <p>{{ item.title }}</p>
+    <ion-button color="medium" (click)="dismissCard(item.id, i)"
+      >Dismiss Card</ion-button
+    >
   </app-mm-card>
+  } } @else {
+  <p>You're all caught up. No notifications</p>
+  }
 </ion-content>

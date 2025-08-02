@@ -7,16 +7,33 @@ import {
   PushNotifications,
   PushNotificationSchema,
 } from "@capacitor/push-notifications";
+import { BehaviorSubject, Observable } from "rxjs";
+import { BrazeContentCard } from "@models/braze/braze-content-card";
 
 @Injectable({
   providedIn: "root",
 })
 export class PushNotificationService {
+  private cards = new BehaviorSubject<BrazeContentCard[]>([]);
   constructor() {}
+
+  public getCards(): Observable<BrazeContentCard[]> {
+    return this.cards.asObservable();
+  }
 
   init() {
     PushNotifications.addListener("registration", (token) => {
       console.log("~ PushNotificationService ~ token:", token);
+
+      BrazePlugin.getContentCardsFromCache(
+        (cards: BrazeContentCard[]) => {
+          console.log("cache cards >>>> ", cards);
+          this.cards.next(cards);
+        },
+        (err: any) => {
+          console.log("cache cards error ", err);
+        }
+      );
     });
 
     PushNotifications.addListener(
@@ -31,8 +48,9 @@ export class PushNotificationService {
           console.log("getting cards >>>> ");
 
           BrazePlugin.getContentCardsFromServer(
-            (cards: any) => {
+            (cards: BrazeContentCard[]) => {
               console.log("cards >>>> ", cards);
+              this.cards.next(cards);
             },
             (err: any) => {
               console.log("cards error ", err);

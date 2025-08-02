@@ -1,7 +1,8 @@
-import { Component } from "@angular/core";
+import { Component, Input, NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 
 import {
+  AlertController,
   IonButton,
   IonButtons,
   IonContent,
@@ -12,6 +13,8 @@ import {
   ModalController,
 } from "@ionic/angular/standalone";
 import { MmCardComponent } from "@components/mm-card/mm-card.component";
+import { BrazeContentCard } from "@models/braze/braze-content-card";
+import { PushNotificationService } from "@services/push-notification.service";
 
 @Component({
   selector: "app-notification-modal",
@@ -30,15 +33,49 @@ import { MmCardComponent } from "@components/mm-card/mm-card.component";
   ],
 })
 export class NotificationModalComponent {
-  name!: string;
+  @Input() data: BrazeContentCard[] | undefined;
 
-  constructor(private modalCtrl: ModalController) {}
+  constructor(
+    private modalCtrl: ModalController,
+    private alertController: AlertController
+  ) {}
 
-  cancel() {
-    return this.modalCtrl.dismiss(null, "cancel");
+  ngOnInit() {
+    console.log("data:", this.data);
   }
 
-  confirm() {
-    return this.modalCtrl.dismiss(this.name, "confirm");
+  async dismissCard(id: string, index: number): Promise<void> {
+    const alert = await this.alertController.create({
+      header: "Delete Message",
+      message: "Are you sure you would like to delete this message?",
+      buttons: [
+        {
+          text: "No",
+          role: "no",
+        },
+        {
+          role: "yes",
+          text: "Yes",
+        },
+      ],
+    });
+
+    await alert.present();
+
+    const { role } = await alert.onDidDismiss();
+
+    if (role === "yes") {
+      BrazePlugin.logContentCardDismissed(id);
+      this.data?.splice(index, 1);
+
+      console.log("logContentCardDismissed: ", id);
+    }
+  }
+
+  cancel() {
+    console.log("refresh cards on cancel");
+
+    BrazePlugin.requestContentCardsRefresh();
+    return this.modalCtrl.dismiss(null, "cancel");
   }
 }

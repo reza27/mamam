@@ -1,7 +1,12 @@
 import { Component } from "@angular/core";
 import { HeaderComponent } from "@components/header/header.component";
 import { MmCardComponent } from "@components/mm-card/mm-card.component";
-import { IonHeader, IonContent, IonButton } from "@ionic/angular/standalone";
+import {
+  IonHeader,
+  IonContent,
+  IonButton,
+  ModalController,
+} from "@ionic/angular/standalone";
 
 @Component({
   selector: "app-home",
@@ -42,6 +47,8 @@ import { IonHeader, IonContent, IonButton } from "@ionic/angular/standalone";
 export class HomePage {
   sendInboxTestEvent(): void {
     // TODO: Log Braze custom event INBOX_MESSAGE_TEST to trigger an Inbox push notification and accompanying content card
-    console.log("test");
+    BrazePlugin.logCustomEvent("INBOX_MESSAGE_TEST", {});
+    //braze.logCustomEvent("INBOX_MESSAGE_TEST", {});
+    console.log("log custom message 21");
   }
 }

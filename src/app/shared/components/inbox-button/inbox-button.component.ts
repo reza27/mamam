@@ -1,20 +1,41 @@
-import { AfterViewInit, Component, input, signal } from '@angular/core';
-import { IonButton, IonIcon, IonAccordion } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { notificationsOutline } from 'ionicons/icons';
-import anime, { AnimeInstance } from 'animejs';
+import { AfterViewInit, Component, input, signal } from "@angular/core";
+import {
+  IonButton,
+  IonIcon,
+  IonAccordion,
+  ModalController,
+} from "@ionic/angular/standalone";
+import { addIcons } from "ionicons";
+import { notificationsOutline } from "ionicons/icons";
+import anime, { AnimeInstance } from "animejs";
+import { Router } from "@angular/router";
+import { NotificationModalComponent } from "src/app/notifications/notification.modal.component";
 
 @Component({
-  selector: 'app-inbox-button',
+  selector: "app-inbox-button",
   template: `
     <div class="notification-button">
       @if (unreadMessages()) {
-      <svg class="notification-button-unread" height="10" width="10" xmlns="http://www.w3.org/2000/svg">
+      <svg
+        class="notification-button-unread"
+        height="10"
+        width="10"
+        xmlns="http://www.w3.org/2000/svg"
+      >
         <circle r="4.5" cx="5" cy="5" fill="red" />
       </svg>
       }
-      <ion-button class="bell" [slot]="slot()" fill="clear" (click)="showInbox()">
-        <ion-icon color="dark" slot="icon-only" name="notifications-outline"></ion-icon>
+      <ion-button
+        class="bell"
+        [slot]="slot()"
+        fill="clear"
+        (click)="showInbox()"
+      >
+        <ion-icon
+          color="dark"
+          slot="icon-only"
+          name="notifications-outline"
+        ></ion-icon>
       </ion-button>
     </div>
   `,
@@ -35,22 +56,34 @@ import anime, { AnimeInstance } from 'animejs';
           z-index: 99;
         }
       }
-    `
+    `,
   ],
   imports: [IonButton, IonIcon],
-  standalone: true
+  standalone: true,
 })
 export class InboxButtonComponent implements AfterViewInit {
-  readonly slot = input<IonAccordion['toggleIconSlot']>();
+  readonly slot = input<IonAccordion["toggleIconSlot"]>();
   unreadMessages = signal(false);
   private shakeAnimation?: AnimeInstance;
 
-  constructor() {
+  constructor(private router: Router, private modalCtrl: ModalController) {
     addIcons({ notificationsOutline });
   }
 
-  showInbox(): void {
+  async openModal() {}
+
+  async showInbox(): Promise<void> {
     // TODO: Show Inbox component in Modal when tapping Bell icon
+    const modal = await this.modalCtrl.create({
+      component: NotificationModalComponent,
+    });
+    modal.present();
+
+    const { data, role } = await modal.onWillDismiss();
+
+    if (role === "confirm") {
+      //this.message = `Hello, ${data}!`;
+    }
   }
 
   // TODO: When receiving/reading new Braze inbox message, update notification state.
@@ -60,7 +93,7 @@ export class InboxButtonComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.shakeAnimation = anime({
-      targets: '.bell',
+      targets: ".bell",
       translateX: [
         { value: -5, duration: 50 },
         { value: 5, duration: 50 },
@@ -70,11 +103,11 @@ export class InboxButtonComponent implements AfterViewInit {
         { value: 5, duration: 50 },
         { value: -5, duration: 50 },
         { value: 5, duration: 50 },
-        { value: 0, duration: 50 }
+        { value: 0, duration: 50 },
       ],
-      easing: 'easeInOutSine',
+      easing: "easeInOutSine",
       duration: 2000,
-      autoplay: false
+      autoplay: false,
     });
   }
 }

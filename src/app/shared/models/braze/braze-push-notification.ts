@@ -51,5 +51,5 @@ export interface BrazePushNotification {
 }
 
 export interface BrazeParsedExtra {
-  type?: 'inbox';
+  type?: "inbox";
 }

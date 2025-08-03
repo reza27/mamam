@@ -16,6 +16,7 @@ import { BrazeContentCard } from "@models/braze/braze-content-card";
 export class PushNotificationService {
   private cards = new BehaviorSubject<BrazeContentCard[]>([]);
   private initCards = new BehaviorSubject<BrazeContentCard[]>([]);
+  private hasUnreadMessages = new BehaviorSubject<boolean>(false);
 
   constructor() {}
 
@@ -23,22 +24,25 @@ export class PushNotificationService {
     return this.cards.asObservable();
   }
 
-  public getInitCards(): Observable<BrazeContentCard[]> {
+  public getUpdatedCards(): Observable<BrazeContentCard[]> {
     return this.initCards.asObservable();
+  }
+
+  public async refreshCards(): Promise<void> {
+    BrazePlugin.getContentCardsFromServer(
+      (cards: BrazeContentCard[]) => {
+        this.initCards.next(cards);
+      },
+      (err: any) => {
+        console.log("cards error ", err);
+      }
+    );
   }
 
   init() {
     PushNotifications.addListener("registration", (token) => {
       console.log("~ PushNotificationService ~ token:", token);
-
-      BrazePlugin.getContentCardsFromServer(
-        (cards: BrazeContentCard[]) => {
-          this.initCards.next(cards);
-        },
-        (err: any) => {
-          console.log("cards error ", err);
-        }
-      );
+      this.refreshCards();
     });
 
     PushNotifications.addListener(
@@ -47,7 +51,6 @@ export class PushNotificationService {
         console.log("Push received: ", JSON.stringify(notification));
 
         const extra: BrazeParsedExtra = JSON.parse(notification.data.extra);
-        console.log("Extra type: ", JSON.parse(notification.data.extra));
 
         if (extra?.type === "inbox") {
           BrazePlugin.getContentCardsFromServer(

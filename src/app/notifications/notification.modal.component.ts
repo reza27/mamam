@@ -3,14 +3,9 @@ import { format, fromUnixTime } from "date-fns";
 
 import {
   AlertController,
-  IonButton,
-  IonButtons,
   IonContent,
   IonHeader,
-  IonTitle,
-  IonToolbar,
   ModalController,
-  IonIcon,
 } from "@ionic/angular/standalone";
 import { MmCardComponent } from "@components/mm-card/mm-card.component";
 import { BrazeContentCard } from "@models/braze/braze-content-card";
@@ -19,6 +14,8 @@ import { IDismissCard } from "@models/braze/dismiss-card";
 import { addIcons } from "ionicons";
 import { arrowBackOutline } from "ionicons/icons";
 import { HeaderComponent } from "@components/header/header.component";
+import { InViewDirective } from "../shared/directives/inview.directive";
+import { PushNotificationService } from "@services/push-notification.service";
 
 @Component({
   selector: "app-notification-modal",
@@ -31,17 +28,26 @@ import { HeaderComponent } from "@components/header/header.component";
     IonHeader,
     MmCardComponent,
     forwardRef(() => HeaderComponent),
+    InViewDirective,
   ],
 })
 export class NotificationModalComponent {
   @Input() data: BrazeContentCard[] | undefined;
+  private viewedData: BrazeContentCard[] | undefined;
+  private isViewLoaded: boolean = false;
+  private YES: string = "yes";
 
   constructor(
     private modalCtrl: ModalController,
     private alertController: AlertController,
-    private router: Router
+    private router: Router,
+    private pushNotificationService: PushNotificationService
   ) {
     addIcons({ arrowBackOutline });
+  }
+
+  ngOnInit() {
+    this.viewedData = this.data?.slice();
   }
 
   async dismissCard(obj: IDismissCard): Promise<void> {
@@ -54,7 +60,7 @@ export class NotificationModalComponent {
           role: "no",
         },
         {
-          role: "yes",
+          role: this.YES,
           text: "Yes",
         },
       ],
@@ -64,7 +70,7 @@ export class NotificationModalComponent {
 
     const { role } = await alert.onDidDismiss();
 
-    if (role === "yes") {
+    if (role === this.YES) {
       BrazePlugin.logContentCardDismissed(obj.id);
       this.data?.splice(obj.index, 1);
     }
@@ -81,8 +87,29 @@ export class NotificationModalComponent {
     }
   }
 
+  onItemInView(itemInView: any, inView: boolean) {
+    if (this.isViewLoaded) {
+      const filteredData = this.viewedData?.filter((item) => {
+        if (item.id === itemInView.id) {
+          if (!item.viewed) {
+            BrazePlugin.logContentCardImpression(item.id);
+          }
+        }
+        return item.id !== itemInView.id;
+      });
+
+      this.viewedData = filteredData;
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    this.isViewLoaded = true;
+  }
+
   cancel() {
     BrazePlugin.requestContentCardsRefresh();
+    this.pushNotificationService.refreshCards();
+
     return this.modalCtrl.dismiss(null, "cancel");
   }
 }

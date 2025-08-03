@@ -15,11 +15,15 @@
     [itemId]="item.id"
     [index]="i"
     (dismissCardEvent)="dismissCard($event)"
+    inView
+    (inView)="onItemInView(item, $event)"
   >
     <p>{{ item.cardDescription }}</p>
     <p class="m-t-2">{{ formatDate(item.created) }}</p>
   </app-mm-card>
   } } @else {
-  <p>You're all caught up. No notifications!</p>
+  <p class="notifications-empty-text">
+    You're all caught up! No new notifications.
+  </p>
   }
 </ion-content>

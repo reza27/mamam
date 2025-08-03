@@ -11,6 +11,7 @@ import anime, { AnimeInstance } from "animejs";
 import { NotificationModalComponent } from "src/app/notifications/notification.modal.component";
 import { PushNotificationService } from "@services/push-notification.service";
 import { BrazeContentCard } from "@models/braze/braze-content-card";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-inbox-button",
@@ -66,7 +67,9 @@ export class InboxButtonComponent implements AfterViewInit {
   readonly slot = input<IonAccordion["toggleIconSlot"]>();
   unreadMessages = signal(false);
   private shakeAnimation?: AnimeInstance;
-  private _cards: BrazeContentCard[] = [];
+  private cards: BrazeContentCard[] = [];
+  private cardsSubscription: Subscription | undefined;
+  private updatedCardsSubscription: Subscription | undefined;
 
   constructor(
     private pushNotificationService: PushNotificationService,
@@ -75,13 +78,11 @@ export class InboxButtonComponent implements AfterViewInit {
     addIcons({ notificationsOutline });
   }
 
-  async openModal() {}
-
   async showInbox(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: NotificationModalComponent,
       componentProps: {
-        data: this._cards,
+        data: this.cards,
       },
     });
     modal.present();
@@ -90,17 +91,23 @@ export class InboxButtonComponent implements AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.pushNotificationService.getCards().subscribe((cards) => {
-      if (cards.length > 0) {
-        this.unreadMessages.set(true);
-        this.shakeAnimation?.restart();
-        this._cards = [...cards];
-      }
-    });
+    this.cardsSubscription = this.pushNotificationService
+      .getCards()
+      .subscribe((cards) => {
+        if (cards.length > 0) {
+          this.unreadMessages.set(true);
+          this.shakeAnimation?.restart();
+          this.cards = [...cards].sort((a, b) => b.created - a.created);
+        }
+      });
 
-    this.pushNotificationService.getInitCards().subscribe((cards) => {
-      this._cards = [...cards];
+    this.pushNotificationService.getUpdatedCards().subscribe((cards) => {
+      this.cards = [...cards].sort((a, b) => b.created - a.created);
     });
+  }
+  ngOnDestroy() {
+    this.cardsSubscription?.unsubscribe();
+    this.updatedCardsSubscription?.unsubscribe();
   }
 
   ngAfterViewInit(): void {

@@ -46,6 +46,6 @@ import {
 })
 export class HomePage {
   sendInboxTestEvent(): void {
-    BrazePlugin.logCustomEvent("INBOX_MESSAGE_TEST", {});
+    BrazePlugin.logCustomEvent("INBOX_MESSAGE_TEST");
   }
 }

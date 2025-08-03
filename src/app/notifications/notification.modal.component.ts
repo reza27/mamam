@@ -1,5 +1,5 @@
-import { Component, Input, NgModule } from "@angular/core";
-import { FormsModule } from "@angular/forms";
+import { Component, forwardRef, Input } from "@angular/core";
+import { format, fromUnixTime } from "date-fns";
 
 import {
   AlertController,
@@ -7,29 +7,30 @@ import {
   IonButtons,
   IonContent,
   IonHeader,
-  IonItem,
   IonTitle,
   IonToolbar,
   ModalController,
+  IonIcon,
 } from "@ionic/angular/standalone";
 import { MmCardComponent } from "@components/mm-card/mm-card.component";
 import { BrazeContentCard } from "@models/braze/braze-content-card";
-import { PushNotificationService } from "@services/push-notification.service";
+import { Router } from "@angular/router";
+import { IDismissCard } from "@models/braze/dismiss-card";
+import { addIcons } from "ionicons";
+import { arrowBackOutline } from "ionicons/icons";
+import { HeaderComponent } from "@components/header/header.component";
 
 @Component({
   selector: "app-notification-modal",
   templateUrl: "notification.modal.component.html",
   standalone: true,
+  styleUrls: ["./notification.modal.component.scss"],
+
   imports: [
-    FormsModule,
-    IonButton,
-    IonButtons,
     IonContent,
     IonHeader,
-    IonItem,
-    IonTitle,
-    IonToolbar,
     MmCardComponent,
+    forwardRef(() => HeaderComponent),
   ],
 })
 export class NotificationModalComponent {
@@ -37,14 +38,13 @@ export class NotificationModalComponent {
 
   constructor(
     private modalCtrl: ModalController,
-    private alertController: AlertController
-  ) {}
-
-  ngOnInit() {
-    console.log("data:", this.data);
+    private alertController: AlertController,
+    private router: Router
+  ) {
+    addIcons({ arrowBackOutline });
   }
 
-  async dismissCard(id: string, index: number): Promise<void> {
+  async dismissCard(obj: IDismissCard): Promise<void> {
     const alert = await this.alertController.create({
       header: "Delete Message",
       message: "Are you sure you would like to delete this message?",
@@ -65,16 +65,23 @@ export class NotificationModalComponent {
     const { role } = await alert.onDidDismiss();
 
     if (role === "yes") {
-      BrazePlugin.logContentCardDismissed(id);
-      this.data?.splice(index, 1);
+      BrazePlugin.logContentCardDismissed(obj.id);
+      this.data?.splice(obj.index, 1);
+    }
+  }
+  formatDate(date: number) {
+    return format(fromUnixTime(date), "MM.dd.yyyy hh:mm");
+  }
 
-      console.log("logContentCardDismissed: ", id);
+  naviagateToUrl(url: string | undefined): void {
+    const formattedUrl = "/" + url?.split("//")[1];
+
+    if (url) {
+      this.router.navigate([formattedUrl]).then((_) => this.cancel());
     }
   }
 
   cancel() {
-    console.log("refresh cards on cancel");
-
     BrazePlugin.requestContentCardsRefresh();
     return this.modalCtrl.dismiss(null, "cancel");
   }

@@ -46,9 +46,6 @@ import {
 })
 export class HomePage {
   sendInboxTestEvent(): void {
-    // TODO: Log Braze custom event INBOX_MESSAGE_TEST to trigger an Inbox push notification and accompanying content card
     BrazePlugin.logCustomEvent("INBOX_MESSAGE_TEST", {});
-    //braze.logCustomEvent("INBOX_MESSAGE_TEST", {});
-    console.log("log custom message 21");
   }
 }

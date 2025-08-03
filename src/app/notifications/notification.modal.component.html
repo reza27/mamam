@@ -1,21 +1,25 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-button color="medium" (click)="cancel()">Cancel</ion-button>
-    </ion-buttons>
-    <ion-title>Notifications</ion-title>
-  </ion-toolbar>
+<ion-header mode="ios" class="ion-no-border">
+  <app-header
+    [showBackButton]="true"
+    title="Notifications"
+    (backEvent)="cancel()"
+  ></app-header>
 </ion-header>
 <ion-content class="ion-padding">
-  @if (data?.length) { @for (item of data; track item; let i = $index) {
+  @if (data?.length) { @for (item of data; track item.id; let i = $index) {
 
-  <app-mm-card>
-    <p>{{ item.title }}</p>
-    <ion-button color="medium" (click)="dismissCard(item.id, i)"
-      >Dismiss Card</ion-button
-    >
+  <app-mm-card
+    (click)="naviagateToUrl(item.url)"
+    [title]="item.title || ''"
+    [isInboxMessage]="true"
+    [itemId]="item.id"
+    [index]="i"
+    (dismissCardEvent)="dismissCard($event)"
+  >
+    <p>{{ item.cardDescription }}</p>
+    <p class="m-t-2">{{ formatDate(item.created) }}</p>
   </app-mm-card>
   } } @else {
-  <p>You're all caught up. No notifications</p>
+  <p>You're all caught up. No notifications!</p>
   }
 </ion-content>

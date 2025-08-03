@@ -1,0 +1,14 @@
+.inbox-message-title {
+  font-size: 14px;
+}
+
+.inbox-message-heading {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.dismiss-icon {
+  color: var(--ion-color-danger);
+}

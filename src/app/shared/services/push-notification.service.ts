@@ -15,23 +15,28 @@ import { BrazeContentCard } from "@models/braze/braze-content-card";
 })
 export class PushNotificationService {
   private cards = new BehaviorSubject<BrazeContentCard[]>([]);
+  private initCards = new BehaviorSubject<BrazeContentCard[]>([]);
+
   constructor() {}
 
   public getCards(): Observable<BrazeContentCard[]> {
     return this.cards.asObservable();
   }
 
+  public getInitCards(): Observable<BrazeContentCard[]> {
+    return this.initCards.asObservable();
+  }
+
   init() {
     PushNotifications.addListener("registration", (token) => {
       console.log("~ PushNotificationService ~ token:", token);
 
-      BrazePlugin.getContentCardsFromCache(
+      BrazePlugin.getContentCardsFromServer(
         (cards: BrazeContentCard[]) => {
-          console.log("cache cards >>>> ", cards);
-          this.cards.next(cards);
+          this.initCards.next(cards);
         },
         (err: any) => {
-          console.log("cache cards error ", err);
+          console.log("cards error ", err);
         }
       );
     });
@@ -45,11 +50,8 @@ export class PushNotificationService {
         console.log("Extra type: ", JSON.parse(notification.data.extra));
 
         if (extra?.type === "inbox") {
-          console.log("getting cards >>>> ");
-
           BrazePlugin.getContentCardsFromServer(
             (cards: BrazeContentCard[]) => {
-              console.log("cards >>>> ", cards);
               this.cards.next(cards);
             },
             (err: any) => {
@@ -62,7 +64,7 @@ export class PushNotificationService {
 
     // Some issue with our setup and push will not work
     PushNotifications.addListener("registrationError", (error: any) => {
-      alert("Error on registration 1: " + JSON.stringify(error));
+      alert("Error on registration: " + JSON.stringify(error));
     });
 
     this.registerPush();

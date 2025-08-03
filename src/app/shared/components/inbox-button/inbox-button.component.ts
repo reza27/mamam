@@ -8,7 +8,6 @@ import {
 import { addIcons } from "ionicons";
 import { notificationsOutline } from "ionicons/icons";
 import anime, { AnimeInstance } from "animejs";
-import { Router } from "@angular/router";
 import { NotificationModalComponent } from "src/app/notifications/notification.modal.component";
 import { PushNotificationService } from "@services/push-notification.service";
 import { BrazeContentCard } from "@models/braze/braze-content-card";
@@ -79,38 +78,28 @@ export class InboxButtonComponent implements AfterViewInit {
   async openModal() {}
 
   async showInbox(): Promise<void> {
-    // TODO: Show Inbox component in Modal when tapping Bell icon
     const modal = await this.modalCtrl.create({
       component: NotificationModalComponent,
       componentProps: {
-        data: this._cards, // 'data' is the name of the input property in your modal component
+        data: this._cards,
       },
     });
     modal.present();
 
-    const { data, role } = await modal.onWillDismiss();
-
-    if (role === "confirm") {
-      //this.message = `Hello, ${data}!`;
-    }
-
     this.unreadMessages.set(false);
   }
 
-  // TODO: When receiving/reading new Braze inbox message, update notification state.
-  // Icon should play the shake animation when new unread messages are received.
-  //   this.unreadMessages = true;
-  //   this.shakeAnimation?.restart();
-
   ngOnInit(): void {
     this.pushNotificationService.getCards().subscribe((cards) => {
-      console.log("inbox cards >", cards);
-
       if (cards.length > 0) {
         this.unreadMessages.set(true);
         this.shakeAnimation?.restart();
-        this._cards = cards;
+        this._cards = [...cards];
       }
+    });
+
+    this.pushNotificationService.getInitCards().subscribe((cards) => {
+      this._cards = [...cards];
     });
   }
 

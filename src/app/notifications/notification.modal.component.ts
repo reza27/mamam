@@ -78,7 +78,11 @@ export class NotificationModalComponent {
 
     if (role === this.YES) {
       BrazePlugin.logContentCardDismissed(obj.id);
-      this.data()?.splice(obj.index, 1);
+      this.data.update((currentItems) => {
+        const newItems = [...currentItems];
+        newItems.splice(obj.index, 1);
+        return newItems;
+      });
     }
   }
   formatDate(date: number) {
@@ -121,6 +125,8 @@ export class NotificationModalComponent {
       .subscribe((isFetchingMessages) => {
         if (isFetchingMessages) {
           this.data.set([]);
+        } else {
+          this.pushNotificationService.setHasUnreadMessages(false);
         }
         this.isLoading.set(isFetchingMessages);
       });

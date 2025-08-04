@@ -15,17 +15,13 @@ import { BrazeContentCard } from "@models/braze/braze-content-card";
 })
 export class PushNotificationService {
   private cards = new BehaviorSubject<BrazeContentCard[]>([]);
-  private initCards = new BehaviorSubject<BrazeContentCard[]>([]);
   private hasUnreadMessages = new BehaviorSubject<boolean>(false);
+  private isFetchingMessages = new BehaviorSubject<boolean>(false);
 
   constructor() {}
 
   public getCards(): Observable<BrazeContentCard[]> {
     return this.cards.asObservable();
-  }
-
-  public getUpdatedCards(): Observable<BrazeContentCard[]> {
-    return this.initCards.asObservable();
   }
 
   public getHasUnreadMessages(): Observable<boolean> {
@@ -36,10 +32,24 @@ export class PushNotificationService {
     return this.hasUnreadMessages.next(hasUnreadMessages);
   }
 
+  public getIsFetchingMessages(): Observable<boolean> {
+    return this.isFetchingMessages.asObservable();
+  }
+
+  public setIsFetchingMessages(isFetchingMessages: boolean) {
+    return this.isFetchingMessages.next(isFetchingMessages);
+  }
+
   public async refreshCards(): Promise<void> {
+    console.log("loading...");
+    this.setIsFetchingMessages(true);
     BrazePlugin.getContentCardsFromServer(
       (cards: BrazeContentCard[]) => {
-        this.initCards.next(cards);
+        this.setIsFetchingMessages(false);
+
+        this.cards.next(cards);
+
+        console.log("loaded");
       },
       (err: any) => {
         console.log("cards error ", err);
@@ -61,15 +71,8 @@ export class PushNotificationService {
         const extra: BrazeParsedExtra = JSON.parse(notification.data.extra);
 
         if (extra?.type === "inbox") {
-          BrazePlugin.getContentCardsFromServer(
-            (cards: BrazeContentCard[]) => {
-              this.cards.next(cards);
-              this.setHasUnreadMessages(true);
-            },
-            (err: any) => {
-              console.log("cards error ", err);
-            }
-          );
+          this.setHasUnreadMessages(true);
+          this.refreshCards();
         }
       }
     );

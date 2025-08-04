@@ -7,7 +7,10 @@
 </ion-header>
 <ion-content class="ion-padding">
   <div id="card-content">
-    @if (data?.length) { @for (item of data; track item.id; let i = $index) {
+    @if (isLoading()) {
+    <div>Loading...</div>
+    } @else { @if (data().length) { @for (item of data(); track item.id; let i =
+    $index) {
 
     <app-mm-card
       (click)="naviagateToUrl(item.url)"
@@ -26,6 +29,6 @@
     <p class="notifications-empty-text">
       You're all caught up! No new notifications.
     </p>
-    }
+    } }
   </div>
 </ion-content>

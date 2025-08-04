@@ -1,4 +1,4 @@
-import { Component, forwardRef, Input } from "@angular/core";
+import { Component, forwardRef, Input, signal } from "@angular/core";
 import { format, fromUnixTime } from "date-fns";
 
 import {
@@ -16,6 +16,7 @@ import { arrowBackOutline } from "ionicons/icons";
 import { HeaderComponent } from "@components/header/header.component";
 import { InViewDirective } from "../shared/directives/inview.directive";
 import { PushNotificationService } from "@services/push-notification.service";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-notification-modal",
@@ -32,9 +33,13 @@ import { PushNotificationService } from "@services/push-notification.service";
   ],
 })
 export class NotificationModalComponent {
-  @Input() data: BrazeContentCard[] | undefined;
+  data = signal([] as BrazeContentCard[]);
+  isLoading = signal(false);
+
   private viewedData: BrazeContentCard[] | undefined;
   private YES: string = "yes";
+  private cardsSubscription: Subscription | undefined;
+  private fetchingMessagesSubscription: Subscription | undefined;
 
   constructor(
     private modalCtrl: ModalController,
@@ -46,7 +51,7 @@ export class NotificationModalComponent {
   }
 
   ngOnInit() {
-    this.viewedData = this.data?.slice();
+    this.pushNotificationService.refreshCards();
   }
 
   async dismissCard(obj: IDismissCard): Promise<void> {
@@ -71,7 +76,7 @@ export class NotificationModalComponent {
 
     if (role === this.YES) {
       BrazePlugin.logContentCardDismissed(obj.id);
-      this.data?.splice(obj.index, 1);
+      this.data()?.splice(obj.index, 1);
     }
   }
   formatDate(date: number) {
@@ -99,9 +104,32 @@ export class NotificationModalComponent {
     this.viewedData = filteredData;
   }
 
+  ngAfterViewInit(): void {
+    this.cardsSubscription = this.pushNotificationService
+      .getCards()
+      .subscribe((cards) => {
+        if (cards.length > 0) {
+          this.data.set([...cards]);
+          this.viewedData = this.data()?.slice();
+        }
+      });
+
+    this.fetchingMessagesSubscription = this.pushNotificationService
+      .getIsFetchingMessages()
+      .subscribe((isFetchingMessages) => {
+        if (isFetchingMessages) {
+          this.data.set([]);
+        }
+        this.isLoading.set(isFetchingMessages);
+      });
+  }
+  ngOnDestroy(): void {
+    this.cardsSubscription?.unsubscribe();
+    this.fetchingMessagesSubscription?.unsubscribe();
+  }
+
   cancel() {
     BrazePlugin.requestContentCardsRefresh();
-    this.pushNotificationService.refreshCards();
 
     return this.modalCtrl.dismiss(null, "cancel");
   }

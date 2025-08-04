@@ -11,7 +11,7 @@ import anime, { AnimeInstance } from "animejs";
 import { NotificationModalComponent } from "src/app/notifications/notification.modal.component";
 import { PushNotificationService } from "@services/push-notification.service";
 import { BrazeContentCard } from "@models/braze/braze-content-card";
-import { Subscription } from "rxjs";
+import { asyncScheduler, delay, Subscription } from "rxjs";
 
 @Component({
   selector: "app-inbox-button",
@@ -67,9 +67,6 @@ export class InboxButtonComponent implements AfterViewInit {
   readonly slot = input<IonAccordion["toggleIconSlot"]>();
   unreadMessages = signal(false);
   private shakeAnimation?: AnimeInstance;
-  private cards: BrazeContentCard[] = [];
-  private cardsSubscription: Subscription | undefined;
-  private updatedCardsSubscription: Subscription | undefined;
   private hasUnreadMessages: Subscription | undefined;
 
   constructor(
@@ -82,43 +79,25 @@ export class InboxButtonComponent implements AfterViewInit {
   async showInbox(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: NotificationModalComponent,
-      componentProps: {
-        data: this.cards,
-      },
     });
     modal.present();
-    //this.unreadMessages.set(false);
     this.pushNotificationService.setHasUnreadMessages(false);
   }
 
-  ngOnInit(): void {
-    this.cardsSubscription = this.pushNotificationService
-      .getCards()
-      .subscribe((cards) => {
-        if (cards.length > 0) {
-          this.shakeAnimation?.restart();
-          this.cards = [...cards].sort((a, b) => b.created - a.created);
-        }
-      });
-
-    this.updatedCardsSubscription = this.pushNotificationService
-      .getUpdatedCards()
-      .subscribe((cards) => {
-        this.cards = [...cards].sort((a, b) => b.created - a.created);
-      });
-
-    this.hasUnreadMessages = this.pushNotificationService
-      .getHasUnreadMessages()
-      .subscribe((hasUnreadMessages) => {
-        this.unreadMessages.set(hasUnreadMessages);
-      });
-  }
   ngOnDestroy(): void {
-    this.cardsSubscription?.unsubscribe();
-    this.updatedCardsSubscription?.unsubscribe();
+    this.hasUnreadMessages?.unsubscribe();
   }
 
   ngAfterViewInit(): void {
+    this.hasUnreadMessages = this.pushNotificationService
+      .getHasUnreadMessages()
+      .pipe(delay(300))
+      .subscribe((hasUnreadMessages) => {
+        this.unreadMessages.set(hasUnreadMessages);
+        if (hasUnreadMessages) {
+          this.shakeAnimation?.restart();
+        }
+      });
     this.shakeAnimation = anime({
       targets: ".bell",
       translateX: [

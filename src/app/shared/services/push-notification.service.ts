@@ -41,15 +41,12 @@ export class PushNotificationService {
   }
 
   public async refreshCards(): Promise<void> {
-    console.log("loading...");
     this.setIsFetchingMessages(true);
     BrazePlugin.getContentCardsFromServer(
       (cards: BrazeContentCard[]) => {
         this.setIsFetchingMessages(false);
 
         this.cards.next(cards);
-
-        console.log("loaded");
       },
       (err: any) => {
         console.log("cards error ", err);

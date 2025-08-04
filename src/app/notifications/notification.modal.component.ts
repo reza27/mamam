@@ -17,6 +17,7 @@ import { HeaderComponent } from "@components/header/header.component";
 import { InViewDirective } from "../shared/directives/inview.directive";
 import { PushNotificationService } from "@services/push-notification.service";
 import { Subscription } from "rxjs";
+import { SpinnerComponent } from "@components/spinner/spinner.component";
 
 @Component({
   selector: "app-notification-modal",
@@ -30,6 +31,7 @@ import { Subscription } from "rxjs";
     MmCardComponent,
     forwardRef(() => HeaderComponent),
     InViewDirective,
+    SpinnerComponent,
   ],
 })
 export class NotificationModalComponent {

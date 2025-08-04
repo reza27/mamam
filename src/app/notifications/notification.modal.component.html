@@ -8,7 +8,9 @@
 <ion-content class="ion-padding">
   <div id="card-content">
     @if (isLoading()) {
-    <div>Loading...</div>
+    <div>
+      <app-spinner></app-spinner>
+    </div>
     } @else { @if (data().length) { @for (item of data(); track item.id; let i =
     $index) {
 

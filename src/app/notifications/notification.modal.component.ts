@@ -34,7 +34,6 @@ import { PushNotificationService } from "@services/push-notification.service";
 export class NotificationModalComponent {
   @Input() data: BrazeContentCard[] | undefined;
   private viewedData: BrazeContentCard[] | undefined;
-  private isViewLoaded: boolean = false;
   private YES: string = "yes";
 
   constructor(
@@ -88,22 +87,16 @@ export class NotificationModalComponent {
   }
 
   onItemInView(itemInView: any, inView: boolean) {
-    if (this.isViewLoaded) {
-      const filteredData = this.viewedData?.filter((item) => {
-        if (item.id === itemInView.id) {
-          if (!item.viewed) {
-            BrazePlugin.logContentCardImpression(item.id);
-          }
+    const filteredData = this.viewedData?.filter((item) => {
+      if (item.id === itemInView.id) {
+        if (!item.viewed) {
+          BrazePlugin.logContentCardImpression(item.id);
         }
-        return item.id !== itemInView.id;
-      });
+      }
+      return item.id !== itemInView.id;
+    });
 
-      this.viewedData = filteredData;
-    }
-  }
-
-  ngAfterViewChecked(): void {
-    this.isViewLoaded = true;
+    this.viewedData = filteredData;
   }
 
   cancel() {

@@ -70,6 +70,7 @@ export class InboxButtonComponent implements AfterViewInit {
   private cards: BrazeContentCard[] = [];
   private cardsSubscription: Subscription | undefined;
   private updatedCardsSubscription: Subscription | undefined;
+  private hasUnreadMessages: Subscription | undefined;
 
   constructor(
     private pushNotificationService: PushNotificationService,
@@ -86,8 +87,8 @@ export class InboxButtonComponent implements AfterViewInit {
       },
     });
     modal.present();
-
-    this.unreadMessages.set(false);
+    //this.unreadMessages.set(false);
+    this.pushNotificationService.setHasUnreadMessages(false);
   }
 
   ngOnInit(): void {
@@ -95,17 +96,24 @@ export class InboxButtonComponent implements AfterViewInit {
       .getCards()
       .subscribe((cards) => {
         if (cards.length > 0) {
-          this.unreadMessages.set(true);
           this.shakeAnimation?.restart();
           this.cards = [...cards].sort((a, b) => b.created - a.created);
         }
       });
 
-    this.pushNotificationService.getUpdatedCards().subscribe((cards) => {
-      this.cards = [...cards].sort((a, b) => b.created - a.created);
-    });
+    this.updatedCardsSubscription = this.pushNotificationService
+      .getUpdatedCards()
+      .subscribe((cards) => {
+        this.cards = [...cards].sort((a, b) => b.created - a.created);
+      });
+
+    this.hasUnreadMessages = this.pushNotificationService
+      .getHasUnreadMessages()
+      .subscribe((hasUnreadMessages) => {
+        this.unreadMessages.set(hasUnreadMessages);
+      });
   }
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.cardsSubscription?.unsubscribe();
     this.updatedCardsSubscription?.unsubscribe();
   }

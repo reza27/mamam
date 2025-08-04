@@ -28,6 +28,14 @@ export class PushNotificationService {
     return this.initCards.asObservable();
   }
 
+  public getHasUnreadMessages(): Observable<boolean> {
+    return this.hasUnreadMessages.asObservable();
+  }
+
+  public setHasUnreadMessages(hasUnreadMessages: boolean) {
+    return this.hasUnreadMessages.next(hasUnreadMessages);
+  }
+
   public async refreshCards(): Promise<void> {
     BrazePlugin.getContentCardsFromServer(
       (cards: BrazeContentCard[]) => {
@@ -56,6 +64,7 @@ export class PushNotificationService {
           BrazePlugin.getContentCardsFromServer(
             (cards: BrazeContentCard[]) => {
               this.cards.next(cards);
+              this.setHasUnreadMessages(true);
             },
             (err: any) => {
               console.log("cards error ", err);

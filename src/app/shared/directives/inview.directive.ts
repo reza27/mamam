@@ -1,10 +1,9 @@
 import {
+  AfterViewInit,
   Directive,
   ElementRef,
   EventEmitter,
-  Input,
   OnDestroy,
-  OnInit,
   Output,
 } from "@angular/core";
 
@@ -12,25 +11,25 @@ import {
   selector: "[inView]",
   standalone: true,
 })
-export class InViewDirective implements OnInit, OnDestroy {
+export class InViewDirective implements OnDestroy, AfterViewInit {
   @Output() inView = new EventEmitter<boolean>();
 
   private observer: IntersectionObserver | undefined;
 
   constructor(private elementRef: ElementRef) {}
 
-  ngOnInit() {
+  ngAfterViewInit() {
     this.observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           this.inView.emit(entry.isIntersecting);
-          console.log("Enter", entry.boundingClientRect);
           return;
         }
       },
       {
+        rootMargin: "-100px 0px -20% 0px",
         root: null,
-        threshold: 1,
+        threshold: 0.01,
       }
     );
 

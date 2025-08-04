@@ -6,24 +6,26 @@
   ></app-header>
 </ion-header>
 <ion-content class="ion-padding">
-  @if (data?.length) { @for (item of data; track item.id; let i = $index) {
+  <div id="card-content">
+    @if (data?.length) { @for (item of data; track item.id; let i = $index) {
 
-  <app-mm-card
-    (click)="naviagateToUrl(item.url)"
-    [title]="item.title || ''"
-    [isInboxMessage]="true"
-    [itemId]="item.id"
-    [index]="i"
-    (dismissCardEvent)="dismissCard($event)"
-    inView
-    (inView)="onItemInView(item, $event)"
-  >
-    <p>{{ item.cardDescription }}</p>
-    <p class="m-t-2">{{ formatDate(item.created) }}</p>
-  </app-mm-card>
-  } } @else {
-  <p class="notifications-empty-text">
-    You're all caught up! No new notifications.
-  </p>
-  }
+    <app-mm-card
+      (click)="naviagateToUrl(item.url)"
+      [title]="item.title || ''"
+      [isInboxMessage]="true"
+      [itemId]="item.id"
+      [index]="i"
+      (dismissCardEvent)="dismissCard($event)"
+      inView
+      (inView)="onItemInView(item, $event)"
+    >
+      <p>{{ item.cardDescription }}</p>
+      <p class="m-t-2">{{ formatDate(item.created) }}</p>
+    </app-mm-card>
+    } } @else {
+    <p class="notifications-empty-text">
+      You're all caught up! No new notifications.
+    </p>
+    }
+  </div>
 </ion-content>

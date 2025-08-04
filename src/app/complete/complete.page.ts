@@ -12,7 +12,6 @@ import { MmCardComponent } from "@components/mm-card/mm-card.component";
         [showBackButton]="true"
         [showInboxButton]="true"
         (backEvent)="navigateBack()"
-        (unreadMessages)="(false)"
       ></app-header>
     </ion-header>
 
